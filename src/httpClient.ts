@@ -16,19 +16,37 @@ export class HttpClient {
     const api = opts?.api ?? false;
     const headers = opts?.headers ?? {};
 
-    if (api) {
-      // BUG: truthiness + instanceof check misses the "plain object" token case.
-      if (
-        !this.oauth2Token ||
-        (this.oauth2Token instanceof OAuth2Token && this.oauth2Token.expired)
-      ) {
-        this.refreshOAuth2();
-      }
+    // if (api) {
+    //   // BUG: truthiness + instanceof check misses the "plain object" token case.
+    //   if (
+    //     !this.oauth2Token ||
+    //     (this.oauth2Token instanceof OAuth2Token && this.oauth2Token.expired)
+    //   ) {
+    //     this.refreshOAuth2();
+    //   }
 
-      if (this.oauth2Token instanceof OAuth2Token) {
-        headers["Authorization"] = this.oauth2Token.asHeader();
-      }
-    }
+    //   if (this.oauth2Token instanceof OAuth2Token) {
+    //     headers["Authorization"] = this.oauth2Token.asHeader();
+    //   }
+    // }
+    if (api) {
+  // Refresh if:
+  // - no token
+  // - expired OAuth2Token instance
+  // - OR token is plain object (non-OAuth2Token)
+  if (
+    !this.oauth2Token ||
+    (this.oauth2Token instanceof OAuth2Token && this.oauth2Token.expired) ||
+    !(this.oauth2Token instanceof OAuth2Token)
+  ) {
+    this.refreshOAuth2();
+  }
+
+  // Now set header only if we have a valid OAuth2Token instance
+  if (this.oauth2Token instanceof OAuth2Token) {
+    headers["Authorization"] = this.oauth2Token.asHeader();
+  }
+}
 
     return { method, path, headers };
   }
